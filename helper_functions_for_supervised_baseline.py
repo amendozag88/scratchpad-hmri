@@ -248,3 +248,56 @@ fig_auroc, fig_auprc = plot_transfer_learning_curves(
     label_fractions=label_fractions,
     plot_mode="per_class",
 )
+
+
+import matplotlib.pyplot as plt
+
+plot_df = df_results.copy()
+
+class_labels = {
+    "low_RVEF": "Reduced RVEF",
+    "dilated_RV": "RV dilation",
+}
+
+method_order = ["Supervised", "Linear probe", "Full fine-tune"]
+fractions = [1, 2, 5, 10, 25, 50, 100]
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4.2), sharey=True)
+
+for ax, class_name in zip(axes, ["low_RVEF", "dilated_RV"]):
+    subset = plot_df[plot_df["class"] == class_name]
+
+    for method in method_order:
+        method_df = subset[subset["method"] == method].sort_values("fraction")
+
+        ax.plot(
+            method_df["fraction"],
+            method_df["auroc"],
+            marker="o",
+            linewidth=2,
+            markersize=5,
+            label=method,
+        )
+
+    ax.set_title(class_labels[class_name], fontsize=12)
+    ax.set_xlabel("Labeled training data (%)")
+    ax.set_xticks(fractions)
+    ax.set_xscale("log")
+    ax.set_xlim(0.8, 120)
+    ax.grid(True, alpha=0.25)
+
+axes[0].set_ylabel("AUROC")
+axes[0].set_ylim(0.5, 0.92)
+
+handles, labels = axes[0].get_legend_handles_labels()
+fig.legend(
+    handles,
+    labels,
+    loc="upper center",
+    bbox_to_anchor=(0.5, 1.05),
+    ncol=3,
+    frameon=False,
+)
+
+fig.tight_layout()
+plt.show()
